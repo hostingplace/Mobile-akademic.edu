@@ -212,10 +212,12 @@
 
       /* --- Core App Styles --- */
       .header {
-        position: absolute;
+        position: fixed;
         top: 0;
-        left: 0;
+        left: 50%;
+        transform: translateX(-50%);
         width: 100%;
+        max-width: 430px;
         background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(10px);
         padding: 16px 20px;
@@ -831,8 +833,10 @@
       .bottom-nav {
         position: fixed;
         bottom: 0;
-        left: 0;
+        left: 50%;
+        transform: translateX(-50%);
         width: 100%;
+        max-width: 430px;
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         display: flex;
