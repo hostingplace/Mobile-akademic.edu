@@ -1491,608 +1491,658 @@
     </div>
 
     <script>
-      // --- 1. DATA & STATE ---
-      let currentUser = null;
-      let currentTab = "beranda";
-      let filters = { course: "semua" };
+            // --- 1. DATA & STATE ---
+            let currentUser = null;
+            let currentTab = "beranda";
+            let filters = { course: "semua" };
 
-      // Update Courses (Mata Kuliah) sesuai request
-      const courses = [
-        { id: "1", name: "SISTEM BASIS DATA", code: "SBD", color: "#4361EE" },
-        { id: "2", name: "PENDIDIKAN PANCASILA", code: "PP", color: "#E63946" },
-        { id: "3", name: "ELEKTRONIKA DIGITAL", code: "ED", color: "#7209B7" },
-        {
-          id: "4",
-          name: "ALJABAR LINEAR DAN MATRIK",
-          code: "ALM",
-          color: "#06A77D",
-        },
-        { id: "5", name: "PEMROGRAMAN PYTHON", code: "PY", color: "#FF9E00" },
-      ];
+            // Update Courses (Mata Kuliah) sesuai request
+            const courses = [
+              { id: "1", name: "SISTEM BASIS DATA", code: "SBD", color: "#4361EE" },
+              { id: "2", name: "PENDIDIKAN PANCASILA", code: "PP", color: "#E63946" },
+              { id: "3", name: "ELEKTRONIKA DIGITAL", code: "ED", color: "#7209B7" },
+              {
+                id: "4",
+                name: "ALJABAR LINEAR DAN MATRIK",
+                code: "ALM",
+                color: "#06A77D",
+              },
+              { id: "5", name: "PEMROGRAMAN PYTHON", code: "PY", color: "#FF9E00" },
+            ];
 
-      const recordingCategories = [
-        { id: "0", name: "Umum", color: "#4361EE" },
-        { id: "1", name: "Pelajaran", color: "#7209B7" },
-        { id: "2", name: "Rapat", color: "#E63946" },
-      ];
-      let selectedCategory = recordingCategories[0];
+            const recordingCategories = [
+              { id: "0", name: "Umum", color: "#4361EE" },
+              { id: "1", name: "Pelajaran", color: "#7209B7" },
+              { id: "2", name: "Rapat", color: "#E63946" },
+            ];
+            let selectedCategory = recordingCategories[0];
 
-      let tasks = [];
-      let recordings = [];
+            let tasks = [];
+            let recordings = [];
 
-      // App Settings
-      let appSettings = {
-        darkMode: false,
-        themeColor: "default",
-        notifDeadline: true,
-        notifDaily: true,
-        translate: false,
-      };
+            // App Settings
+            let appSettings = {
+              darkMode: false,
+              themeColor: "default",
+              notifDeadline: true,
+              notifDaily: true,
+              translate: false,
+            };
 
-      const headerTitles = {
-        beranda: "Akademic.edu",
-        tugas: "Manajemen Tugas",
-        rekam: "Rekam Suara",
-        pengaturan: "Pengaturan",
-      };
+            const headerTitles = {
+              beranda: "Akademic.edu",
+              tugas: "Manajemen Tugas",
+              rekam: "Rekam Suara",
+              pengaturan: "Pengaturan",
+            };
 
-      // --- 2. INIT ---
-      document.addEventListener("DOMContentLoaded", () => {
-        checkAuth();
-        loadFromStorage();
-        loadSettings();
-        renderAll();
-        initializeCourseChips();
-        initializeCategoryOptions();
-        updateRecordingTitle();
-      });
+            // --- 2. INIT ---
+            document.addEventListener("DOMContentLoaded", () => {
+              checkAuth();
+              loadFromStorage();
+              loadSettings();
+              renderAll();
+              initializeCourseChips();
+              initializeCategoryOptions();
+              updateRecordingTitle();
+            });
 
-      // --- 3. AUTHENTICATION ---
-      function checkAuth() {
-        const storedUser = localStorage.getItem("academicflow_user");
-        const authWrapper = document.getElementById("auth-wrapper");
-        const appMainView = document.getElementById("app-main-view");
+            // --- 3. AUTHENTICATION ---
+            function checkAuth() {
+              const storedUser = localStorage.getItem("academicflow_user");
+              const authWrapper = document.getElementById("auth-wrapper");
+              const appMainView = document.getElementById("app-main-view");
 
-        if (storedUser) {
-          currentUser = JSON.parse(storedUser);
-          authWrapper.style.display = "none";
-          appMainView.style.display = "block";
+              if (storedUser) {
+                currentUser = JSON.parse(storedUser);
+                authWrapper.style.display = "none";
+                appMainView.style.display = "block";
 
-          const firstName = currentUser.name.split(" ")[0];
-          document.getElementById("display-name-home").textContent = firstName;
-          document.getElementById("profile-display-name").textContent =
-            currentUser.name;
-          document.getElementById("profile-display-email").textContent =
-            currentUser.email;
-          document.getElementById("profile-university").textContent =
-            currentUser.university || "-";
-          document.getElementById("profile-semester").textContent =
-            "Semester " + (currentUser.semester || "-");
-        } else {
-          authWrapper.style.display = "flex";
-          appMainView.style.display = "none";
-          toggleAuthMode("login");
-        }
-      }
+                const firstName = currentUser.name.split(" ")[0];
+                document.getElementById("display-name-home").textContent = firstName;
+                document.getElementById("profile-display-name").textContent =
+                  currentUser.name;
+                document.getElementById("profile-display-email").textContent =
+                  currentUser.email;
+                document.getElementById("profile-university").textContent =
+                  currentUser.university || "-";
+                document.getElementById("profile-semester").textContent =
+                  "Semester " + (currentUser.semester || "-");
+              } else {
+                authWrapper.style.display = "flex";
+                appMainView.style.display = "none";
+                toggleAuthMode("login");
+              }
+            }
 
-      function toggleAuthMode(mode) {
-        document.getElementById("login-form").classList.remove("active");
-        document.getElementById("register-form").classList.remove("active");
-        document.getElementById(`${mode}-form`).classList.add("active");
-      }
+            function toggleAuthMode(mode) {
+              document.getElementById("login-form").classList.remove("active");
+              document.getElementById("register-form").classList.remove("active");
+              document.getElementById(`${mode}-form`).classList.add("active");
+            }
 
-      function handleRegister(e) {
-        e.preventDefault();
-        const name = document.getElementById("register-name").value;
-        const email = document.getElementById("register-email").value;
-        const pass = document.getElementById("register-password").value;
-        const university = document.getElementById("register-university").value;
-        const semester = document.getElementById("register-semester").value;
-        const users = JSON.parse(
-          localStorage.getItem("academicflow_users") || "[]",
-        );
+            function handleRegister(e) {
+              e.preventDefault();
+              const name = document.getElementById("register-name").value;
+              const email = document.getElementById("register-email").value;
+              const pass = document.getElementById("register-password").value;
+              const university = document.getElementById("register-university").value;
+              const semester = document.getElementById("register-semester").value;
+              const users = JSON.parse(
+                localStorage.getItem("academicflow_users") || "[]",
+              );
 
-        if (users.find((u) => u.email === email))
-          return alert("Email sudah terdaftar!");
+              if (users.find((u) => u.email === email))
+                return alert("Email sudah terdaftar!");
 
-        const newUser = {
-          name,
-          email,
-          password: pass,
-          university,
-          semester,
-        };
-        users.push(newUser);
-        localStorage.setItem("academicflow_users", JSON.stringify(users));
-        localStorage.setItem("academicflow_user", JSON.stringify(newUser));
-        document.getElementById("register-form").reset();
-        generateSampleData(); // Buat data awal
-        checkAuth();
-        renderAll();
-      }
+              const newUser = {
+                name,
+                email,
+                password: pass,
+                university,
+                semester,
+              };
+              users.push(newUser);
+              localStorage.setItem("academicflow_users", JSON.stringify(users));
+              localStorage.setItem("academicflow_user", JSON.stringify(newUser));
+              document.getElementById("register-form").reset();
+              generateSampleData(); // Buat data awal
+              checkAuth();
+              renderAll();
+            }
 
-      function handleLogin(e) {
-        e.preventDefault();
-        const email = document.getElementById("login-email").value;
-        const pass = document.getElementById("login-password").value;
-        const users = JSON.parse(
-          localStorage.getItem("academicflow_users") || "[]",
-        );
-        const user = users.find(
-          (u) => u.email === email && u.password === pass,
-        );
+            function handleLogin(e) {
+              e.preventDefault();
+              const email = document.getElementById("login-email").value;
+              const pass = document.getElementById("login-password").value;
+              const users = JSON.parse(
+                localStorage.getItem("academicflow_users") || "[]",
+              );
+              const user = users.find(
+                (u) => u.email === email && u.password === pass,
+              );
 
-        if (user) {
-          localStorage.setItem("academicflow_user", JSON.stringify(user));
-          document.getElementById("login-form").reset();
-          checkAuth();
-          renderAll();
-        } else {
-          alert("Email atau Kata Sandi salah!");
-        }
-      }
+              if (user) {
+                localStorage.setItem("academicflow_user", JSON.stringify(user));
+                document.getElementById("login-form").reset();
+                checkAuth();
+                renderAll();
+              } else {
+                alert("Email atau Kata Sandi salah!");
+              }
+            }
 
-      function mockSocialLogin(provider) {
-        const mockUser = {
-          name: `Pengguna ${provider}`,
-          email: `user@${provider.toLowerCase()}.com`,
-        };
-        localStorage.setItem("academicflow_user", JSON.stringify(mockUser));
-        generateSampleData();
-        checkAuth();
-        renderAll();
-      }
+            function mockSocialLogin(provider) {
+              const mockUser = {
+                name: `Pengguna ${provider}`,
+                email: `user@${provider.toLowerCase()}.com`,
+              };
+              localStorage.setItem("academicflow_user", JSON.stringify(mockUser));
+              generateSampleData();
+              checkAuth();
+              renderAll();
+            }
 
-      function handleLogout() {
-        localStorage.removeItem("academicflow_user");
-        switchTab("beranda");
-        checkAuth();
-      }
+            function handleLogout() {
+              localStorage.removeItem("academicflow_user");
+              switchTab("beranda");
+              checkAuth();
+            }
 
-      function handleDeleteAccount() {
-        if (
-          confirm(
-            "Apakah Anda yakin ingin menghapus akun? Semua data tugas dan rekaman akan hilang.",
-          )
-        ) {
-          localStorage.removeItem("academicflow_user");
-          localStorage.removeItem("academicflow_tasks");
-          localStorage.removeItem("academicflow_recordings");
-          checkAuth();
-        }
-      }
+            function handleDeleteAccount() {
+              if (
+                confirm(
+                  "Apakah Anda yakin ingin menghapus akun? Semua data tugas dan rekaman akan hilang.",
+                )
+              ) {
+                localStorage.removeItem("academicflow_user");
+                localStorage.removeItem("academicflow_tasks");
+                localStorage.removeItem("academicflow_recordings");
+                checkAuth();
+              }
+            }
 
-      function generateSampleData() {
-        tasks = [
-          {
-            id: "1",
-            title: "Tugas Query Join",
-            courseId: "1",
-            courseName: courses[0].name,
-            courseCode: courses[0].code,
-            courseColor: courses[0].color,
-            completed: false,
-          },
-          {
-            id: "2",
-            title: "Review Nilai Pancasila",
-            courseId: "2",
-            courseName: courses[1].name,
-            courseCode: courses[1].code,
-            courseColor: courses[1].color,
-            completed: false,
-          },
-          {
-            id: "3",
-            title: "Latihan List & Dictionary",
-            courseId: "5",
-            courseName: courses[4].name,
-            courseCode: courses[4].code,
-            courseColor: courses[4].color,
-            completed: false,
-          },
-        ];
-        saveToStorage();
-      }
+            function generateSampleData() {
+              tasks = [
+                {
+                  id: "1",
+                  title: "Tugas Query Join",
+                  courseId: "1",
+                  courseName: courses[0].name,
+                  courseCode: courses[0].code,
+                  courseColor: courses[0].color,
+                  completed: false,
+                },
+                {
+                  id: "2",
+                  title: "Review Nilai Pancasila",
+                  courseId: "2",
+                  courseName: courses[1].name,
+                  courseCode: courses[1].code,
+                  courseColor: courses[1].color,
+                  completed: false,
+                },
+                {
+                  id: "3",
+                  title: "Latihan List & Dictionary",
+                  courseId: "5",
+                  courseName: courses[4].name,
+                  courseCode: courses[4].code,
+                  courseColor: courses[4].color,
+                  completed: false,
+                },
+              ];
+              saveToStorage();
+            }
 
-      // --- 4. STORAGE & RENDER ---
-      function loadFromStorage() {
-        const t = localStorage.getItem("academicflow_tasks");
-        const r = localStorage.getItem("academicflow_recordings");
-        if (t) tasks = JSON.parse(t);
-        if (r) recordings = JSON.parse(r);
-      }
+            // --- 4. STORAGE & RENDER ---
+            function loadFromStorage() {
+              const t = localStorage.getItem("academicflow_tasks");
+              const r = localStorage.getItem("academicflow_recordings");
+              if (t) tasks = JSON.parse(t);
+              if (r) recordings = JSON.parse(r);
+            }
 
-      function saveToStorage() {
-        try {
-          localStorage.setItem("academicflow_tasks", JSON.stringify(tasks));
-          localStorage.setItem(
-            "academicflow_recordings",
-            JSON.stringify(recordings),
-          );
-        } catch (e) {
-          alert("Penyimpanan penuh! Hapus beberapa rekaman lama.");
-        }
-      }
+            function saveToStorage() {
+              try {
+                localStorage.setItem("academicflow_tasks", JSON.stringify(tasks));
+                localStorage.setItem(
+                  "academicflow_recordings",
+                  JSON.stringify(recordings),
+                );
+              } catch (e) {
+                alert("Penyimpanan penuh! Hapus beberapa rekaman lama.");
+              }
+            }
 
-      function switchTab(tab) {
-        currentTab = tab;
-        document
-          .getElementById("header")
-          .querySelector(".header-title").textContent = headerTitles[tab];
-        document
-          .querySelectorAll(".screen")
-          .forEach((s) => s.classList.remove("active"));
-        document.getElementById(`screen-${tab}`).classList.add("active");
-        document.querySelectorAll(".nav-item").forEach((item) => {
-          item.classList.remove("active");
-          if (item.dataset.tab === tab) item.classList.add("active");
-        });
-        renderAll();
-      }
+            function switchTab(tab) {
+              currentTab = tab;
+              document
+                .getElementById("header")
+                .querySelector(".header-title").textContent = headerTitles[tab];
+              document
+                .querySelectorAll(".screen")
+                .forEach((s) => s.classList.remove("active"));
+              document.getElementById(`screen-${tab}`).classList.add("active");
+              document.querySelectorAll(".nav-item").forEach((item) => {
+                item.classList.remove("active");
+                if (item.dataset.tab === tab) item.classList.add("active");
+              });
+              renderAll();
+            }
 
-      function renderAll() {
-        document.getElementById("total-rekaman-stat").textContent =
-          recordings.length;
-        renderBerandaTasks();
-        renderBerandaRecordings();
-        renderTasksList();
-        renderRecordingsList();
-      }
+            function renderAll() {
+              document.getElementById("total-rekaman-stat").textContent =
+                recordings.length;
+              renderBerandaTasks();
+              renderBerandaRecordings();
+              renderTasksList();
+              renderRecordingsList();
+            }
 
-      function renderBerandaTasks() {
-        const container = document.getElementById("beranda-tasks");
-        const upcoming = tasks.filter((t) => !t.completed).slice(0, 3);
-        if (!upcoming.length)
-          return (container.innerHTML = `<div class="empty-state"><p>Tidak ada tugas aktif</p></div>`);
-        container.innerHTML = upcoming.map(createTaskCard).join("");
-      }
+            function renderBerandaTasks() {
+              const container = document.getElementById("beranda-tasks");
+              const upcoming = tasks.filter((t) => !t.completed).slice(0, 3);
+              if (!upcoming.length)
+                return (container.innerHTML = `<div class="empty-state"><p>Tidak ada tugas aktif</p></div>`);
+              container.innerHTML = upcoming.map(createTaskCard).join("");
+            }
 
-      function renderTasksList() {
-        const container = document.getElementById("tasks-list");
-        const search = document
-          .getElementById("search-input")
-          .value.toLowerCase();
-        let filtered = tasks.filter((t) => {
-          if (filters.course !== "semua" && t.courseId !== filters.course)
-            return false;
-          if (search && !t.title.toLowerCase().includes(search)) return false;
-          return true;
-        });
-        if (!filtered.length)
-          return (container.innerHTML = `<div class="empty-state"><p>Tugas tidak ditemukan.</p></div>`);
-        container.innerHTML = filtered.map(createTaskCard).join("");
-      }
+            function renderTasksList() {
+              const container = document.getElementById("tasks-list");
+              const search = document
+                .getElementById("search-input")
+                .value.toLowerCase();
+              let filtered = tasks.filter((t) => {
+                if (filters.course !== "semua" && t.courseId !== filters.course)
+                  return false;
+                if (search && !t.title.toLowerCase().includes(search)) return false;
+                return true;
+              });
+              if (!filtered.length)
+                return (container.innerHTML = `<div class="empty-state"><p>Tugas tidak ditemukan.</p></div>`);
+              container.innerHTML = filtered.map(createTaskCard).join("");
+            }
 
-      function renderBerandaRecordings() {
-        const container = document.getElementById("beranda-recordings");
-        const recs = recordings.slice(0, 2);
-        if (!recs.length)
-          return (container.innerHTML = `<div class="empty-state"><p>Belum ada rekaman</p></div>`);
-        container.innerHTML = recs.map(createRecordingCard).join("");
-      }
+            function renderBerandaRecordings() {
+              const container = document.getElementById("beranda-recordings");
+              const recs = recordings.slice(0, 2);
+              if (!recs.length)
+                return (container.innerHTML = `<div class="empty-state"><p>Belum ada rekaman</p></div>`);
+              container.innerHTML = recs.map(createRecordingCard).join("");
+            }
 
-      function renderRecordingsList() {
-        const container = document.getElementById("recordings-list");
-        if (!recordings.length)
-          return (container.innerHTML = `<div class="empty-state"><p>Belum ada rekaman</p></div>`);
-        container.innerHTML = recordings.map(createRecordingCard).join("");
-      }
+            function renderRecordingsList() {
+              const container = document.getElementById("recordings-list");
+              if (!recordings.length)
+                return (container.innerHTML = `<div class="empty-state"><p>Belum ada rekaman</p></div>`);
+              container.innerHTML = recordings.map(createRecordingCard).join("");
+            }
 
-      function createTaskCard(task) {
-        return `
-      <div class="task-card" style="border-left-color: ${task.courseColor}">
-          <div class="task-content">
-              <div class="task-header">
-                  <span class="course-badge" style="background: ${task.courseColor}20; color: ${task.courseColor}">${task.courseCode}</span>
-                  <span class="course-name" style="color: ${task.courseColor}">${task.courseName}</span>
-              </div>
-              <div class="task-title ${task.completed ? "completed" : ""}">${task.title}</div>
-          </div>
-          <div class="checkbox ${task.completed ? "checked" : ""}" onclick="toggleTaskComplete('${task.id}')">
-              ${task.completed ? '<i class="fas fa-check"></i>' : ""}
-          </div>
-      </div>
-    `;
-      }
+            function createTaskCard(task) {
+              return `
+            <div class="task-card" style="border-left-color: ${task.courseColor}">
+                <div class="task-content">
+                    <div class="task-header">
+                        <span class="course-badge" style="background: ${task.courseColor}20; color: ${task.courseColor}">${task.courseCode}</span>
+                        <span class="course-name" style="color: ${task.courseColor}">${task.courseName}</span>
+                    </div>
+                    <div class="task-title ${task.completed ? "completed" : ""}">${task.title}</div>
+                </div>
+                <div class="checkbox ${task.completed ? "checked" : ""}" onclick="toggleTaskComplete('${task.id}')">
+                    ${task.completed ? '<i class="fas fa-check"></i>' : ""}
+                </div>
+            </div>
+          `;
+            }
 
-      function createRecordingCard(rec) {
-        return `
-      <div class="recording-card">
-          <div class="play-button" onclick="playAudio('${rec.id}', this)"><i class="fas fa-play"></i></div>
-          <div class="recording-content">
-              <div class="recording-title">${rec.title}</div>
-              <div class="recording-category">${rec.categoryName}</div>
-          </div>
-          <div class="delete-btn" onclick="deleteRecording('${rec.id}')"><i class="fas fa-trash"></i></div>
-      </div>
-    `;
-      }
+            function createRecordingCard(rec) {
+              return `
+            <div class="recording-card">
+                <div class="play-button" onclick="playAudio('${rec.id}', this)"><i class="fas fa-play"></i></div>
+                <div class="recording-content">
+                    <div class="recording-title">${rec.title}</div>
+                    <div class="recording-category">${rec.categoryName}</div>
+                </div>
+                <div class="delete-btn" onclick="deleteRecording('${rec.id}')"><i class="fas fa-trash"></i></div>
+            </div>
+          `;
+            }
 
-      function toggleTaskComplete(taskId) {
-        const task = tasks.find((t) => t.id === taskId);
-        if (task) {
-          task.completed = !task.completed;
-          saveToStorage();
-          renderAll();
-        }
-      }
+            function toggleTaskComplete(taskId) {
+              const task = tasks.find((t) => t.id === taskId);
+              if (task) {
+                task.completed = !task.completed;
+                saveToStorage();
+                renderAll();
+              }
+            }
 
-      function deleteRecording(id) {
-        if (confirm("Hapus rekaman ini?")) {
-          recordings = recordings.filter((r) => r.id !== id);
-          saveToStorage();
-          renderAll();
-        }
-      }
+            function deleteRecording(id) {
+              if (confirm("Hapus rekaman ini?")) {
+                recordings = recordings.filter((r) => r.id !== id);
+                saveToStorage();
+                renderAll();
+              }
+            }
 
-      // --- 5. AUDIO RECORDING (Fungsi Nyata) ---
-      let mediaRecorder;
+            // --- 5. AUDIO RECORDING (Fungsi Nyata) ---
+            let mediaRecorder;
+            let audioChunks = [];
+            let isRecording = false;
+            let recordingInterval;
+            let recTime = 0;
+            const audioPlayer = document.getElementById("audio-player");
+            let currentPlayingBtn = null;
+
+            async function toggleRecording() {
+              let mediaRecorder;
       let audioChunks = [];
       let isRecording = false;
       let recordingInterval;
       let recTime = 0;
-      const audioPlayer = document.getElementById("audio-player");
-      let currentPlayingBtn = null;
+           
+    }
+
+      const MAX_RECORDING_TIME = 7200; // 2 JAM (7200 detik)
 
       async function toggleRecording() {
+
         const btn = document.getElementById("record-button");
         const icon = document.getElementById("record-icon");
         const status = document.getElementById("recording-status");
         const timerDisplay = document.getElementById("timer-display");
 
         if (!isRecording) {
+
           try {
+
             const stream = await navigator.mediaDevices.getUserMedia({
-              audio: true,
+              audio: true
             });
+
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
 
             mediaRecorder.ondataavailable = (event) => {
-              if (event.data.size > 0) audioChunks.push(event.data);
+              if (event.data.size > 0) {
+                audioChunks.push(event.data);
+              }
             };
 
             mediaRecorder.onstop = saveRecordingBlob;
+
             mediaRecorder.start();
 
             isRecording = true;
             recTime = 0;
+
             btn.classList.add("recording");
             icon.className = "fas fa-stop";
+
             status.textContent = "Sedang Merekam...";
             status.classList.add("active");
 
             recordingInterval = setInterval(() => {
+
               recTime++;
+
               const m = Math.floor(recTime / 60)
                 .toString()
                 .padStart(2, "0");
-              const s = (recTime % 60).toString().padStart(2, "0");
+
+              const s = (recTime % 60)
+                .toString()
+                .padStart(2, "0");
+
               timerDisplay.textContent = `${m}:${s}`;
+
+              // BATAS 2 JAM
+              if (recTime >= MAX_RECORDING_TIME) {
+
+                mediaRecorder.stop();
+                clearInterval(recordingInterval);
+
+                isRecording = false;
+
+                btn.classList.remove("recording");
+                icon.className = "fas fa-microphone";
+
+                status.textContent = "Rekaman mencapai batas 2 jam";
+                status.classList.remove("active");
+
+              }
+
             }, 1000);
+
           } catch (err) {
-            alert(
-              "Akses mikrofon ditolak atau tidak tersedia pada perangkat ini.",
-            );
+
+            alert("Akses mikrofon ditolak atau tidak tersedia pada perangkat ini.");
+
           }
+
         } else {
+
           mediaRecorder.stop();
+
           clearInterval(recordingInterval);
+
           isRecording = false;
+
           btn.classList.remove("recording");
           icon.className = "fas fa-microphone";
+
           status.textContent = "Menyimpan...";
           status.classList.remove("active");
-          timerDisplay.textContent = "00:00";
+
         }
       }
 
-      function saveRecordingBlob() {
-        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = function () {
-          const base64Audio = reader.result;
-          const newRec = {
-            id: Date.now().toString(),
-            title:
-              document.getElementById("recording-title").value ||
-              "Rekaman Tanpa Judul",
-            categoryId: selectedCategory.id,
-            categoryName: selectedCategory.name,
-            audioData: base64Audio, // simpan audio dalam bentuk base64 ke localstorage
-          };
-          recordings.unshift(newRec);
-          saveToStorage();
-          document.getElementById("recording-status").textContent =
-            "Siap Merekam";
-          updateRecordingTitle();
-          renderAll();
-        };
-      }
+            function saveRecordingBlob() {
+              const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+              const reader = new FileReader();
+              reader.readAsDataURL(audioBlob);
+              reader.onloadend = function () {
+                const base64Audio = reader.result;
+                const newRec = {
+                  id: Date.now().toString(),
+                  title:
+                    document.getElementById("recording-title").value ||
+                    "Rekaman Tanpa Judul",
+                  categoryId: selectedCategory.id,
+                  categoryName: selectedCategory.name,
+                  audioData: base64Audio, // simpan audio dalam bentuk base64 ke localstorage
+                };
+                recordings.unshift(newRec);
+                saveToStorage();
+                document.getElementById("recording-status").textContent =
+                  "Siap Merekam";
+                updateRecordingTitle();
+                renderAll();
+              };
+            }
 
-      function playAudio(id, btnElement) {
-        const rec = recordings.find((r) => r.id === id);
-        if (!rec || !rec.audioData) return alert("File audio tidak ditemukan!");
+            function playAudio(id, btnElement) {
+              const rec = recordings.find((r) => r.id === id);
+              if (!rec || !rec.audioData) return alert("File audio tidak ditemukan!");
 
-        // Jika sedang play dan klik tombol pause
-        if (!audioPlayer.paused && currentPlayingBtn === btnElement) {
-          audioPlayer.pause();
-          btnElement.innerHTML = '<i class="fas fa-play"></i>';
-          return;
-        }
+              // Jika sedang play dan klik tombol pause
+              if (!audioPlayer.paused && currentPlayingBtn === btnElement) {
+                audioPlayer.pause();
+                btnElement.innerHTML = '<i class="fas fa-play"></i>';
+                return;
+              }
 
-        // Reset tombol lama jika ada
-        if (currentPlayingBtn)
-          currentPlayingBtn.innerHTML = '<i class="fas fa-play"></i>';
+              // Reset tombol lama jika ada
+              if (currentPlayingBtn)
+                currentPlayingBtn.innerHTML = '<i class="fas fa-play"></i>';
 
-        // Play audio baru
-        audioPlayer.src = rec.audioData;
-        audioPlayer.play();
-        btnElement.innerHTML = '<i class="fas fa-pause"></i>';
-        currentPlayingBtn = btnElement;
+              // Play audio baru
+              audioPlayer.src = rec.audioData;
+              audioPlayer.play();
+              btnElement.innerHTML = '<i class="fas fa-pause"></i>';
+              currentPlayingBtn = btnElement;
 
-        // Ketika selesai, kembalikan ikon play
-        audioPlayer.onended = () => {
-          btnElement.innerHTML = '<i class="fas fa-play"></i>';
-          currentPlayingBtn = null;
-        };
-      }
+              // Ketika selesai, kembalikan ikon play
+              audioPlayer.onended = () => {
+                btnElement.innerHTML = '<i class="fas fa-play"></i>';
+                currentPlayingBtn = null;
+              };
+            }
 
-      function updateRecordingTitle() {
-        const d = new Date();
-        document.getElementById("recording-title").value =
-          `${selectedCategory.name} - ${d.getDate()}/${d.getMonth() + 1}`;
-      }
+            function updateRecordingTitle() {
+              const d = new Date();
+              document.getElementById("recording-title").value =
+                `${selectedCategory.name} - ${d.getDate()}/${d.getMonth() + 1}`;
+            }
 
-      // --- 6. SETTINGS & PREFERENCES (Fungsi Nyata) ---
-      function loadSettings() {
-        const saved = localStorage.getItem("academicflow_settings");
-        if (saved) appSettings = { ...appSettings, ...JSON.parse(saved) };
+            // --- 6. SETTINGS & PREFERENCES (Fungsi Nyata) ---
+            function loadSettings() {
+              const saved = localStorage.getItem("academicflow_settings");
+              if (saved) appSettings = { ...appSettings, ...JSON.parse(saved) };
 
-        // Set UI Toggles
-        document.getElementById("setting-dark-mode").checked =
-          appSettings.darkMode;
-        document.getElementById("setting-notif-deadline").checked =
-          appSettings.notifDeadline;
-        document.getElementById("setting-notif-daily").checked =
-          appSettings.notifDaily;
-        document.getElementById("setting-translate").checked =
-          appSettings.translate;
+              // Set UI Toggles
+              document.getElementById("setting-dark-mode").checked =
+                appSettings.darkMode;
+              document.getElementById("setting-notif-deadline").checked =
+                appSettings.notifDeadline;
+              document.getElementById("setting-notif-daily").checked =
+                appSettings.notifDaily;
+              document.getElementById("setting-translate").checked =
+                appSettings.translate;
 
-        applyDarkMode();
-        applyColorTheme(appSettings.themeColor);
-      }
+              applyDarkMode();
+              applyColorTheme(appSettings.themeColor);
+            }
 
-      function saveSettings() {
-        appSettings.notifDeadline = document.getElementById(
-          "setting-notif-deadline",
-        ).checked;
-        appSettings.notifDaily = document.getElementById(
-          "setting-notif-daily",
-        ).checked;
-        appSettings.translate =
-          document.getElementById("setting-translate").checked;
-        localStorage.setItem(
-          "academicflow_settings",
-          JSON.stringify(appSettings),
-        );
-      }
+            function saveSettings() {
+              appSettings.notifDeadline = document.getElementById(
+                "setting-notif-deadline",
+              ).checked;
+              appSettings.notifDaily = document.getElementById(
+                "setting-notif-daily",
+              ).checked;
+              appSettings.translate =
+                document.getElementById("setting-translate").checked;
+              localStorage.setItem(
+                "academicflow_settings",
+                JSON.stringify(appSettings),
+              );
+            }
 
-      function toggleDarkMode() {
-        appSettings.darkMode =
-          document.getElementById("setting-dark-mode").checked;
-        applyDarkMode();
-        localStorage.setItem(
-          "academicflow_settings",
-          JSON.stringify(appSettings),
-        );
-      }
+            function toggleDarkMode() {
+              appSettings.darkMode =
+                document.getElementById("setting-dark-mode").checked;
+              applyDarkMode();
+              localStorage.setItem(
+                "academicflow_settings",
+                JSON.stringify(appSettings),
+              );
+            }
 
-      function applyDarkMode() {
-        if (appSettings.darkMode) {
-          document.body.classList.add("dark-theme");
-        } else {
-          document.body.classList.remove("dark-theme");
-        }
-      }
+            function applyDarkMode() {
+              if (appSettings.darkMode) {
+                document.body.classList.add("dark-theme");
+              } else {
+                document.body.classList.remove("dark-theme");
+              }
+            }
 
-      function changeColorTheme(themeName, hexColor) {
-        appSettings.themeColor = themeName;
-        localStorage.setItem(
-          "academicflow_settings",
-          JSON.stringify(appSettings),
-        );
-        applyColorTheme(themeName);
-      }
+            function changeColorTheme(themeName, hexColor) {
+              appSettings.themeColor = themeName;
+              localStorage.setItem(
+                "academicflow_settings",
+                JSON.stringify(appSettings),
+              );
+              applyColorTheme(themeName);
+            }
 
-      function applyColorTheme(themeName) {
-        // Reset UI Options
-        document
-          .querySelectorAll(".color-option")
-          .forEach((el) => el.classList.remove("active"));
-        document
-          .querySelectorAll(".color-circle i")
-          .forEach((i) => (i.style.display = "none"));
+            function applyColorTheme(themeName) {
+              // Reset UI Options
+              document
+                .querySelectorAll(".color-option")
+                .forEach((el) => el.classList.remove("active"));
+              document
+                .querySelectorAll(".color-circle i")
+                .forEach((i) => (i.style.display = "none"));
 
-        // Set Active UI
-        const targetEl = document.getElementById(`color-${themeName}`);
-        if (targetEl) {
-          targetEl.classList.add("active");
-          document.getElementById(`check-${themeName}`).style.display = "block";
-        }
+              // Set Active UI
+              const targetEl = document.getElementById(`color-${themeName}`);
+              if (targetEl) {
+                targetEl.classList.add("active");
+                document.getElementById(`check-${themeName}`).style.display = "block";
+              }
 
-        // Set CSS Var
-        let color = "#4361ee"; // default
-        if (themeName === "blue") color = "#0ea5e9";
-        if (themeName === "green") color = "#10b981";
+              // Set CSS Var
+              let color = "#4361ee"; // default
+              if (themeName === "blue") color = "#0ea5e9";
+              if (themeName === "green") color = "#10b981";
 
-        document.documentElement.style.setProperty("--primary", color);
-      }
+              document.documentElement.style.setProperty("--primary", color);
+            }
 
-      // --- 7. MODALS ---
-      function openFilterModal() {
-        document.getElementById("filter-modal").classList.add("active");
-      }
-      function closeFilterModal() {
-        document.getElementById("filter-modal").classList.remove("active");
-      }
-      function resetFilters() {
-        filters.course = "semua";
-        closeFilterModal();
-        renderTasksList();
-        updateChipUI();
-      }
+            // --- 7. MODALS ---
+            function openFilterModal() {
+              document.getElementById("filter-modal").classList.add("active");
+            }
+            function closeFilterModal() {
+              document.getElementById("filter-modal").classList.remove("active");
+            }
+            function resetFilters() {
+              filters.course = "semua";
+              closeFilterModal();
+              renderTasksList();
+              updateChipUI();
+            }
 
-      function initializeCourseChips() {
-        document.getElementById("course-chips").innerHTML = `
-      <button class="chip active" data-value="semua">Semua</button>
-      ${courses.map((c) => `<button class="chip" data-value="${c.id}">${c.code}</button>`).join("")}
-    `;
-        document.querySelectorAll("#course-chips .chip").forEach((chip) => {
-          chip.addEventListener("click", () => {
-            filters.course = chip.dataset.value;
-            updateChipUI();
-          });
-        });
-      }
+            function initializeCourseChips() {
+              document.getElementById("course-chips").innerHTML = `
+            <button class="chip active" data-value="semua">Semua</button>
+            ${courses.map((c) => `<button class="chip" data-value="${c.id}">${c.code}</button>`).join("")}
+          `;
+              document.querySelectorAll("#course-chips .chip").forEach((chip) => {
+                chip.addEventListener("click", () => {
+                  filters.course = chip.dataset.value;
+                  updateChipUI();
+                });
+              });
+            }
 
-      function updateChipUI() {
-        document.querySelectorAll("#course-chips .chip").forEach((c) => {
-          c.classList.remove("active");
-          if (c.dataset.value === filters.course) c.classList.add("active");
-        });
-      }
+            function updateChipUI() {
+              document.querySelectorAll("#course-chips .chip").forEach((c) => {
+                c.classList.remove("active");
+                if (c.dataset.value === filters.course) c.classList.add("active");
+              });
+            }
 
-      function openCategoryModal() {
-        document.getElementById("category-modal").classList.add("active");
-      }
-      function closeCategoryModal() {
-        document.getElementById("category-modal").classList.remove("active");
-      }
+            function openCategoryModal() {
+              document.getElementById("category-modal").classList.add("active");
+            }
+            function closeCategoryModal() {
+              document.getElementById("category-modal").classList.remove("active");
+            }
 
-      function initializeCategoryOptions() {
-        document.getElementById("category-options").innerHTML =
-          recordingCategories
-            .map(
-              (cat) => `
-      <div style="padding: 14px 20px; cursor: pointer; border-bottom:1px solid var(--border);" 
-           onclick="selectCategory('${cat.id}')">${cat.name}</div>
-    `,
-            )
-            .join("");
-      }
+            function initializeCategoryOptions() {
+              document.getElementById("category-options").innerHTML =
+                recordingCategories
+                  .map(
+                    (cat) => `
+            <div style="padding: 14px 20px; cursor: pointer; border-bottom:1px solid var(--border);"
+                 onclick="selectCategory('${cat.id}')">${cat.name}</div>
+          `,
+                  )
+                  .join("");
+            }
 
-      function selectCategory(categoryId) {
-        selectedCategory = recordingCategories.find((c) => c.id === categoryId);
-        document.getElementById("selected-category-name").textContent =
-          selectedCategory.name;
-        document.getElementById("selected-category-dot").style.background =
-          selectedCategory.color;
-        updateRecordingTitle();
-        closeCategoryModal();
-      }
+            function selectCategory(categoryId) {
+              selectedCategory = recordingCategories.find((c) => c.id === categoryId);
+              document.getElementById("selected-category-name").textContent =
+                selectedCategory.name;
+              document.getElementById("selected-category-dot").style.background =
+                selectedCategory.color;
+              updateRecordingTitle();
+              closeCategoryModal();
+            }
     </script>
   </body>
 </html>
